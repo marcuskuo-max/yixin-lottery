@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>億鑫例會抽獎輪盤</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: projector-first board. Weighted wheel on the left; prize ticket, result, winner slots and the ticket table on the right. One column on phones. */
+:root{
+  --bg:#EDEFF2;
+  --surface:#FFFFFF;
+  --ink:#1D1F22;
+  --muted:#5C636B;
+  --line:#D5D9DE;
+  --accent:#C8102E;
+  --accent-ink:#FFFFFF;
+  --gold:#B8862A;
+  --rim:#2B3036;
+  --peg:#E9ECEF;
+  --sep:#FFFFFF;
+  --dim:rgba(237,239,242,.76);
+  --font-display:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --font-num:"Barlow Condensed","Arial Narrow",ui-sans-serif,system-ui,sans-serif;
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131518; --surface:#1C1F23; --ink:#ECEEF0; --muted:#9BA3AC; --line:#2E3339;
+    --accent:#F0525F; --accent-ink:#1A0508; --gold:#E2B24A; --rim:#3A4048; --peg:#C9CFD6; --sep:#1C1F23;
+    --dim:rgba(19,21,24,.74); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131518; --surface:#1C1F23; --ink:#ECEEF0; --muted:#9BA3AC; --line:#2E3339;
+  --accent:#F0525F; --accent-ink:#1A0508; --gold:#E2B24A; --rim:#3A4048; --peg:#C9CFD6; --sep:#1C1F23;
+  --dim:rgba(19,21,24,.74); color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55}
+
+.app{max-width:1280px;margin:0 auto;padding-block:20px 48px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;flex-direction:column;gap:20px}
+:root:fullscreen .app{max-width:none}
+
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-bottom:14px;border-bottom:2px solid var(--accent)}
+.brand{display:flex;flex-direction:column;gap:2px;min-width:0}
+.kicker{font:700 13px/1.2 var(--font-body);letter-spacing:.14em;color:var(--accent)}
+h1{font-family:var(--font-display);font-weight:900;font-size:clamp(28px,4vw,42px);line-height:1.15;margin:0;letter-spacing:.02em;text-wrap:balance}
+.sub{margin:2px 0 0;color:var(--muted);font-size:14px}
+.sub b{font-family:var(--font-num);font-size:17px;color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tool,.ghost{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 14px/1 var(--font-body);padding:10px 14px;border-radius:10px;cursor:pointer}
+.tool:hover:not(:disabled),.ghost:hover:not(:disabled){border-color:var(--muted)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+
+.board{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:900px){.board{grid-template-columns:minmax(0,1fr)}}
+
+.wheel-col{display:flex;justify-content:center;min-width:0;padding-top:10px}
+.wheel-wrap{position:relative;width:min(100%, 78vh, 860px);max-width:100%;aspect-ratio:1;container-type:inline-size}
+.wheel-wrap canvas{display:block;width:100%;height:100%;filter:drop-shadow(0 10px 24px rgba(20,24,30,.22))}
+.pointer{position:absolute;top:-14px;left:50%;width:7%;min-width:28px;transform:translateX(-50%);z-index:2;overflow:visible}
+.pointer path{fill:var(--accent);stroke:var(--accent);stroke-width:5;stroke-linejoin:round}
+.hub{position:absolute;left:50%;top:50%;width:21%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
+  border:5px solid var(--accent);background:var(--surface);color:var(--accent);
+  font-family:var(--font-display);font-weight:900;font-size:clamp(22px,4.2vw,42px);font-size:8.5cqi;line-height:1;
+  cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22);z-index:2;transition:transform .15s ease}
+.hub:hover:not(:disabled){transform:translate(-50%,-50%) scale(1.05)}
+.hub:disabled{opacity:1;cursor:progress}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+/* prize card styled as a raffle ticket stub */
+.prize{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.prize::before,.prize::after{content:"";position:absolute;left:84px;width:18px;height:18px;border-radius:50%;background:var(--bg);border:1px solid var(--line);transform:translateX(-50%)}
+.prize::before{top:-10px}
+.prize::after{bottom:-10px}
+.stub{width:84px;background:var(--accent);color:var(--accent-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:12px 6px;border-right:2px dashed var(--surface)}
+.stub small{font:700 12px/1 var(--font-body);letter-spacing:.12em}
+.stub strong{font:700 40px/1 var(--font-num);font-variant-numeric:tabular-nums}
+.prize-body{padding:12px 16px 12px 22px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.prize-label{font:700 12px/1.3 var(--font-body);letter-spacing:.12em;color:var(--gold)}
+.prize-name{font:900 clamp(18px,2.2vw,24px)/1.3 var(--font-display);overflow-wrap:anywhere}
+.prize-rule{font-size:14px;color:var(--muted)}
+
+.result{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 22px 20px;min-height:180px;display:flex;flex-direction:column;justify-content:center;gap:6px;border-left:6px solid var(--win, var(--line))}
+.eyebrow{font:700 13px/1.2 var(--font-body);letter-spacing:.1em;color:var(--muted)}
+.result.won .eyebrow{color:var(--accent)}
+.res-main{font-family:var(--font-display);font-weight:900;font-size:clamp(44px,6.4vw,84px);line-height:1.1;color:var(--ink);overflow-wrap:anywhere}
+.res-main.idle{font-size:clamp(28px,3.4vw,40px);font-weight:700}
+.res-main.rolling{color:var(--muted)}
+.res-sub{font-size:18px;color:var(--muted);overflow-wrap:anywhere}
+.result.won .res-sub{color:var(--ink)}
+.res-note{font-size:14px;color:var(--muted)}
+.pop{animation:pop .55s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes pop{from{transform:scale(.82);opacity:.3}to{transform:none;opacity:1}}
+
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.primary{background:var(--accent);color:var(--accent-ink);border:0;font:700 19px/1 var(--font-body);padding:16px 30px;border-radius:12px;cursor:pointer;letter-spacing:.06em}
+.primary:hover:not(:disabled){filter:brightness(1.08)}
+.primary.small{font-size:15px;padding:11px 18px;letter-spacing:.02em}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.panel h2{margin:0;font-size:16px;font-weight:700}
+.meta{font-size:13px;color:var(--muted)}
+.meta b{font-family:var(--font-num);font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
+
+.slots{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.slots li{display:grid;grid-template-columns:5.5em minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 2px;border-top:1px solid var(--line)}
+.slots li:first-child{border-top:0}
+.slot-tag{font:700 13px/1.2 var(--font-body);color:var(--muted);letter-spacing:.06em}
+.slot-name{font:900 22px/1.2 var(--font-display);min-width:0;overflow-wrap:anywhere}
+.slot-name.wait{font-weight:500;font-size:16px;color:var(--muted)}
+.slot-tix{font:600 16px/1 var(--font-num);color:var(--muted);font-variant-numeric:tabular-nums}
+.slots li.filled .slot-tag{color:var(--accent)}
+.slots li.reserve .slot-tag{color:var(--gold)}
+
+.tix{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:2px 16px}
+.tix li{display:grid;grid-template-columns:12px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.dot{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.12)}
+.t-name{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-n{font:600 16px/1 var(--font-num);font-variant-numeric:tabular-nums;text-align:right;min-width:3.2em}
+.t-p{font:600 15px/1 var(--font-num);color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;min-width:3.6em}
+.tix li.won{opacity:.55}
+.tix li.won .t-name{text-decoration:line-through}
+.tix li.won .t-p{color:var(--accent);font-family:var(--font-body);font-size:12px;font-weight:700}
+.foot{margin:0;font-size:13px;color:var(--muted)}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.ghost.armed{border-color:var(--accent);color:var(--accent)}
+.status{margin:0;font-size:13px;color:var(--muted);min-height:1.2em}
+
+.editor{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.editor summary{cursor:pointer;padding:14px 18px;font-weight:700}
+.editor-body{padding:0 18px 18px;display:flex;flex-direction:column;gap:12px}
+.hint{margin:0;color:var(--muted);font-size:14px;max-width:65ch}
+.fields{display:grid;grid-template-columns:minmax(0,1fr) 9em;gap:12px}
+@media (max-width:520px){.fields{grid-template-columns:minmax(0,1fr)}}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:13px;color:var(--muted);font-weight:500}
+.field input,textarea{width:100%;font:15px/1.6 var(--font-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{resize:vertical;line-height:1.7}
+
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+
+@media (prefers-reduced-motion: reduce){.pop{animation:none}.hub{transition:none}}
+</style>
+
+</head>
+<body>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <span class="kicker">BNI 億鑫分會・10/16 例會</span>
+      <h1>本週抽獎</h1>
+      <p class="sub" id="subLine">籤數依 9/26–10/02 PALMS 引薦數，1 筆 = 1 張籤</p>
+    </div>
+    <div class="toolbar">
+      <button id="soundBtn" class="tool" type="button" aria-pressed="true">音效：開</button>
+      <button id="fsBtn" class="tool" type="button">全螢幕</button>
+    </div>
+  </header>
+
+  <main class="board">
+    <section class="wheel-col" aria-label="抽獎輪盤">
+      <div class="wheel-wrap" id="wheelWrap">
+        <canvas id="wheel" aria-hidden="true"></canvas>
+        <svg class="pointer" viewBox="0 0 40 46" aria-hidden="true"><path d="M6 6 H34 L20 40 Z"/></svg>
+        <button class="hub" id="hubBtn" type="button" aria-label="開始抽獎">抽</button>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="prize">
+        <div class="stub"><small>共抽</small><strong id="stubCount">2</strong><small>位</small></div>
+        <div class="prize-body">
+          <span class="prize-label">本週獎品</span>
+          <span class="prize-name" id="prizeName">《太陽能行動電源》永續產品</span>
+          <span class="prize-rule" id="prizeRule">每位一份・抽中後整人移出輪盤</span>
+        </div>
+      </div>
+
+      <div class="result" id="result" aria-live="polite">
+        <div class="eyebrow" id="resEyebrow">準備好了</div>
+        <div class="res-main idle" id="resMain">19 位・73 張籤</div>
+        <div class="res-sub" id="resSub">按「開始抽獎」、輪盤中央的「抽」，或按空白鍵。</div>
+        <div class="res-note" id="resNote" hidden></div>
+      </div>
+
+      <div class="controls">
+        <button id="spinBtn" class="primary" type="button">抽第 1 位</button>
+        <button id="reserveBtn" class="ghost" type="button" hidden>加抽備取</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>得獎名單</h2>
+          <span class="meta" id="slotMeta"></span>
+        </div>
+        <ol class="slots" id="slots"></ol>
+        <div class="actions">
+          <button id="copyBtn" class="ghost" type="button">複製得獎名單</button>
+          <button id="resetBtn" class="ghost" type="button">重新開始</button>
+        </div>
+        <p class="status" id="histStatus" role="status"></p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>籤數與中獎機率</h2>
+          <span class="meta" id="tixMeta"></span>
+        </div>
+        <ul class="tix" id="tix"></ul>
+        <p class="foot">機率 = 個人籤數 ÷ 輪盤上剩下的總籤數，扇形大小也照這個比例畫。</p>
+      </div>
+    </aside>
+  </main>
+
+  <details class="editor" id="editor">
+    <summary>編輯獎品與名單</summary>
+    <div class="editor-body">
+      <div class="fields">
+        <div class="field">
+          <label for="prizeInput">獎品名稱</label>
+          <input id="prizeInput" type="text">
+        </div>
+        <div class="field">
+          <label for="countInput">抽出人數</label>
+          <input id="countInput" type="number" min="1" max="20" step="1">
+        </div>
+      </div>
+      <div class="field">
+        <label for="rosterInput">名單（一行一位，格式「姓名 籤數」，沒寫籤數算 1 張）</label>
+        <textarea id="rosterInput" rows="12" spellcheck="false"></textarea>
+      </div>
+      <div class="actions">
+        <button id="applyBtn" class="primary small" type="button">套用</button>
+        <button id="restoreBtn" class="ghost" type="button">還原 10/16 名單</button>
+        <span class="status" id="editStatus" role="status"></span>
+      </div>
+    </div>
+  </details>
+</div>
+
+<script>
+(function(){
+  const TAU = Math.PI * 2;
+  const KEY = 'yixin-lottery-v1';
+  const FONT = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
+  const DEFAULTS = {
+    prize: '《太陽能行動電源》永續產品',
+    count: 2,
+    roster: [
+      '吳瑋祈 22','石力嘉 6','邱連平 5','葉世祥 4','官東億 4','黃正中 4','曹語蓁 4','朱靜姍 4',
+      '劉亭妤 3','郭展佑 3','葉俊亨 2','余典濃 2','黃國彥 2','林建池 2','陳鋐豈 2',
+      '王姵婷 1','林明燦 1','宋玫珠 1','張耿維 1'
+    ].join('\n')
+  };
+  // slice fills stay the same in both themes; text color chosen for contrast on each fill
+  const PALETTE = [
+    { bg:'#C8102E', fg:'#FFFFFF' },
+    { bg:'#F2F3F5', fg:'#1D1F22' },
+    { bg:'#2B3036', fg:'#FFFFFF' },
+    { bg:'#E9B949', fg:'#1D1F22' },
+    { bg:'#7A0C1E', fg:'#FFFFFF' },
+    { bg:'#AEB7C0', fg:'#1D1F22' }
+  ];
+  const RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = id => document.getElementById(id);
+
+  // ---------- state ----------
+  const S = { prize:DEFAULTS.prize, count:DEFAULTS.count, roster:DEFAULTS.roster, winners:[], reserves:0, muted:false };
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const v = JSON.parse(raw);
+      if (v && typeof v.roster === 'string' && v.roster.trim()) {
+        S.roster = v.roster;
+        if (typeof v.prize === 'string' && v.prize.trim()) S.prize = v.prize;
+        if (Number.isInteger(v.count) && v.count > 0 && v.count <= 20) S.count = v.count;
+        if (Array.isArray(v.winners)) S.winners = v.winners.filter(x => typeof x === 'string');
+        if (Number.isInteger(v.reserves) && v.reserves >= 0) S.reserves = v.reserves;
+        S.muted = !!v.muted;
+      }
+    }
+  } catch (e) {}
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+  // ---------- roster ----------
+  function parseRoster(text){
+    const map = new Map();
+    String(text).split(/\r?\n/).forEach(raw => {
+      const line = raw.trim();
+      if (!line) return;
+      const m = line.match(/^(.+?)[\s:：,，\t]+(\d+)\s*張?$/);
+      const name = (m ? m[1] : line).trim();
+      const n = m ? parseInt(m[2], 10) : 1;
+      if (!name || !(n > 0)) return;
+      map.set(name, (map.get(name) || 0) + n);
+    });
+    return [...map].map(([name, tickets], i) => ({ name, tickets, order:i }));
+  }
+  // Wheel order alternates big and small ticket counts so tiny slices are spread around the rim.
+  function wheelOrder(list){
+    const s = list.slice().sort((a, b) => b.tickets - a.tickets || a.order - b.order);
+    const out = []; let i = 0, j = s.length - 1, big = true;
+    while (i <= j) { out.push(big ? s[i++] : s[j--]); big = !big; }
+    return out;
+  }
+
+  let people = [], byName = new Map(), pending = null, spinning = false, rot = 0;
+  function loadPeople(){
+    people = wheelOrder(parseRoster(S.roster));
+    people.forEach((p, i) => {
+      let c = i % PALETTE.length;
+      if (people.length > 1 && i === people.length - 1 && c === 0) c = 3;
+      p.color = c;
+    });
+    byName = new Map(people.map(p => [p.name, p]));
+    S.winners = S.winners.filter(n => byName.has(n));
+  }
+  const slotsTotal = () => S.count + S.reserves;
+  const remaining = () => people.filter(p => !S.winners.includes(p.name));
+  // the wheel keeps the latest winner visible (highlighted) until the next spin starts
+  const wheelPool = () => people.filter(p => !S.winners.includes(p.name) || p.name === pending);
+  const sumT = list => list.reduce((a, p) => a + p.tickets, 0);
+
+  // ---------- randomness ----------
+  function randInt(n){
+    if (n <= 1) return 0;
+    if (window.crypto && crypto.getRandomValues) {
+      const a = new Uint32Array(1);
+      const lim = Math.floor(0x100000000 / n) * n;
+      let x;
+      do { crypto.getRandomValues(a); x = a[0]; } while (x >= lim);
+      return x % n;
+    }
+    return Math.floor(Math.random() * n);
+  }
+  function layout(list){
+    const total = sumT(list) || 1; let acc = 0;
+    return list.map(p => { const a0 = acc; acc += p.tickets / total * TAU; return { p, a0, a1:acc }; });
+  }
+  function idxAt(r, segs){
+    let a = (-Math.PI / 2 - r) % TAU;
+    if (a < 0) a += TAU;
+    for (let i = 0; i < segs.length; i++) if (a < segs[i].a1) return i;
+    return segs.length - 1;
+  }
+
+  // ---------- tokens ----------
+  let T = {};
+  function readTokens(){
+    const cs = getComputedStyle(document.documentElement);
+    const g = k => cs.getPropertyValue(k).trim();
+    T = { sep:g('--sep'), dim:g('--dim'), rim:g('--rim'), peg:g('--peg'), surface:g('--surface'), muted:g('--muted'), accent:g('--accent') };
+  }
+
+  // ---------- wheel ----------
+  const cv = $('wheel'), ctx = cv.getContext('2d'), wrap = $('wheelWrap');
+  let size = 0, dpr = 1;
+  function fitLabel(text, maxW, fs, minFs){
+    let f = fs;
+    ctx.font = `700 ${f}px ${FONT}`;
+    while (ctx.measureText(text).width > maxW && f > minFs) { f -= 1; ctx.font = `700 ${f}px ${FONT}`; }
+    let t = text;
+    if (ctx.measureText(t).width > maxW) {
+      while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+      t += '…';
+    }
+    return t;
+  }
+  function segPath(c, r, a0, a1, full){
+    ctx.beginPath();
+    if (full) { ctx.arc(c, c, r, 0, TAU); return; }
+    ctx.moveTo(c, c); ctx.arc(c, c, r, a0, a1); ctx.closePath();
+  }
+  function draw(highlight){
+    if (!size) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, size, size);
+    const c = size / 2, R = c - 2, ringW = Math.max(8, size * 0.024), r = R - ringW;
+    const list = wheelPool(), segs = layout(list), n = segs.length;
+    ctx.beginPath(); ctx.arc(c, c, R, 0, TAU); ctx.fillStyle = T.rim; ctx.fill();
+    if (!n) {
+      ctx.beginPath(); ctx.arc(c, c, r, 0, TAU); ctx.fillStyle = T.surface; ctx.fill();
+      ctx.fillStyle = T.muted; ctx.font = `500 ${Math.max(14, size * 0.04)}px ${FONT}`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('輪盤上沒有人了', c, c + r * 0.5);
+      return;
+    }
+    const full = n === 1;
+    const hubR = size * 0.105;
+    const textR = r - Math.max(10, size * 0.026);
+    const avail = textR - hubR - 12;
+    segs.forEach(s => {
+      const col = PALETTE[s.p.color], a0 = rot + s.a0, a1 = rot + s.a1, seg = s.a1 - s.a0;
+      segPath(c, r, a0, a1, full); ctx.fillStyle = col.bg; ctx.fill();
+      const chord = 2 * (r * 0.74) * Math.sin(Math.min(seg, Math.PI) / 2);
+      const fs0 = Math.max(9, Math.min(size * (seg > 0.6 ? 0.06 : 0.042), 46, chord * 0.62));
+      ctx.save(); ctx.translate(c, c); ctx.rotate(a0 + seg / 2);
+      const t = fitLabel(s.p.name, avail, fs0, 9);
+      ctx.fillStyle = col.fg; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText(t, textR, 0);
+      ctx.restore();
+      if (highlight && s.p.name !== highlight) { segPath(c, r, a0, a1, full); ctx.fillStyle = T.dim; ctx.fill(); }
+    });
+    if (n > 1) {
+      ctx.strokeStyle = T.sep; ctx.lineWidth = Math.max(1.5, size * 0.0035);
+      segs.forEach(s => {
+        const a = rot + s.a0;
+        ctx.beginPath(); ctx.moveTo(c, c); ctx.lineTo(c + r * Math.cos(a), c + r * Math.sin(a)); ctx.stroke();
+      });
+    }
+    if (highlight) {
+      const s = segs.find(x => x.p.name === highlight);
+      if (s && !full) {
+        segPath(c, r - 2, rot + s.a0, rot + s.a1, false);
+        ctx.strokeStyle = T.accent; ctx.lineWidth = Math.max(3, size * 0.008); ctx.lineJoin = 'round'; ctx.stroke();
+      }
+    }
+    if (n > 1) {
+      ctx.fillStyle = T.peg;
+      const pr = Math.max(2, ringW * 0.26), pr2 = r + ringW / 2;
+      segs.forEach(s => {
+        const a = rot + s.a0;
+        ctx.beginPath(); ctx.arc(c + pr2 * Math.cos(a), c + pr2 * Math.sin(a), pr, 0, TAU); ctx.fill();
+      });
+    }
+  }
+  function redraw(){ draw(spinning ? null : pending); }
+  function resize(){
+    const w = wrap.clientWidth;
+    if (!w) return;
+    size = w; dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    cv.width = Math.round(w * dpr); cv.height = Math.round(w * dpr);
+    redraw();
+  }
+
+  // ---------- sound ----------
+  let ac = null, lastTick = 0;
+  function ensureAudio(){
+    if (S.muted) return;
+    try {
+      if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+      if (ac.state === 'suspended') ac.resume();
+    } catch (e) { ac = null; }
+  }
+  function blip(freq, at, len, vol, type){
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, at); g.gain.exponentialRampToValueAtTime(0.0008, at + len);
+    o.connect(g); g.connect(ac.destination); o.start(at); o.stop(at + len + 0.02);
+  }
+  function tick(){
+    if (S.muted || !ac) return;
+    const now = ac.currentTime;
+    if (now - lastTick < 0.03) return;
+    lastTick = now;
+    try { blip(1300, now, 0.04, 0.06, 'triangle'); } catch (e) {}
+  }
+  function fanfare(){
+    if (S.muted || !ac) return;
+    const t = ac.currentTime;
+    try { [523, 659, 784, 1047].forEach((f, i) => blip(f, t + i * 0.11, i === 3 ? 0.8 : 0.3, 0.12, 'sine')); } catch (e) {}
+  }
+
+  // ---------- confetti ----------
+  const cf = $('confetti'), cfx = cf.getContext('2d');
+  let parts = [], cfRun = false;
+  function confetti(){
+    if (RM) return;
+    const w = cf.width = innerWidth * (devicePixelRatio || 1), h = cf.height = innerHeight * (devicePixelRatio || 1);
+    const k = devicePixelRatio || 1;
+    const cols = ['#C8102E', '#E9B949', '#2B3036', '#FFFFFF', '#7A0C1E'];
+    for (let i = 0; i < 170; i++) {
+      parts.push({ x:w * (0.2 + Math.random() * 0.6), y:h * 0.35, vx:(Math.random() - 0.5) * 16 * k, vy:(-Math.random() * 14 - 4) * k,
+        s:(6 + Math.random() * 7) * k, r:Math.random() * TAU, vr:(Math.random() - 0.5) * 0.3, c:cols[i % cols.length], life:0 });
+    }
+    if (!cfRun) { cfRun = true; requestAnimationFrame(stepCf); }
+  }
+  function stepCf(){
+    const k = devicePixelRatio || 1;
+    cfx.clearRect(0, 0, cf.width, cf.height);
+    parts.forEach(p => {
+      p.vy += 0.35 * k; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life++;
+      cfx.save(); cfx.translate(p.x, p.y); cfx.rotate(p.r); cfx.fillStyle = p.c;
+      cfx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); cfx.restore();
+    });
+    parts = parts.filter(p => p.y < cf.height + 40 && p.life < 400);
+    if (parts.length) requestAnimationFrame(stepCf);
+    else { cfRun = false; cfx.clearRect(0, 0, cf.width, cf.height); }
+  }
+
+  // ---------- UI ----------
+  const els = {
+    sub:$('subLine'), sound:$('soundBtn'), fs:$('fsBtn'), hub:$('hubBtn'), result:$('result'),
+    eyebrow:$('resEyebrow'), main:$('resMain'), rsub:$('resSub'), note:$('resNote'),
+    spin:$('spinBtn'), reserve:$('reserveBtn'), slots:$('slots'), slotMeta:$('slotMeta'),
+    tix:$('tix'), tixMeta:$('tixMeta'), copy:$('copyBtn'), reset:$('resetBtn'), hStatus:$('histStatus'),
+    stub:$('stubCount'), prizeName:$('prizeName'), prizeRule:$('prizeRule'),
+    prizeIn:$('prizeInput'), countIn:$('countInput'), input:$('rosterInput'),
+    apply:$('applyBtn'), restore:$('restoreBtn'), eStatus:$('editStatus')
+  };
+  const slotLabel = i => i < S.count ? `第 ${i + 1} 位` : `備取 ${i - S.count + 1}`;
+  function setNote(t){ els.note.textContent = t; els.note.hidden = !t; }
+  function setWin(color){ els.result.style.setProperty('--win', color || 'var(--line)'); }
+  function pop(el){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+
+  function renderIdle(){
+    const rem = remaining(), k = S.winners.length;
+    setWin(null); setNote('');
+    els.result.classList.remove('won');
+    els.main.className = 'res-main idle';
+    if (!rem.length) {
+      els.eyebrow.textContent = '輪盤上沒有人了';
+      els.main.textContent = '名單已全部抽完';
+      els.rsub.textContent = '按「重新開始」可以再抽一輪。';
+    } else if (k >= slotsTotal()) {
+      els.eyebrow.textContent = '抽獎完成';
+      els.main.textContent = `${S.count} 位得主已產生`;
+      els.rsub.textContent = '得主不在場時，可以按「加抽備取」。';
+    } else {
+      els.eyebrow.textContent = k ? `準備抽${slotLabel(k)}` : '準備好了';
+      els.main.textContent = `${rem.length} 位・${sumT(rem)} 張籤`;
+      els.rsub.textContent = '按「開始抽獎」、輪盤中央的「抽」，或按空白鍵。';
+    }
+  }
+  function showResult(name){
+    const p = byName.get(name), k = S.winners.indexOf(name);
+    setWin(PALETTE[p.color].bg);
+    els.result.classList.add('won');
+    els.eyebrow.textContent = `恭喜！${slotLabel(k)}得主`;
+    els.main.className = 'res-main';
+    els.main.textContent = name;
+    els.rsub.textContent = `獲得 ${S.prize}`;
+    const rem = remaining();
+    if (S.winners.length < slotsTotal() && rem.length) setNote(`已從輪盤移出。下一輪從其餘 ${rem.length} 位、${sumT(rem)} 張籤中抽出。`);
+    else if (S.winners.length >= S.count) setNote('本週抽獎完成，恭喜得主！');
+    else setNote('');
+    pop(els.main);
+  }
+  function setLive(p){
+    setWin(PALETTE[p.color].bg);
+    els.result.classList.remove('won');
+    setNote('');
+    els.eyebrow.textContent = `抽${slotLabel(S.winners.length)}中…`;
+    els.main.className = 'res-main rolling';
+    els.main.textContent = p.name;
+    els.rsub.textContent = ' ';
+  }
+  function renderSlots(){
+    els.slots.textContent = '';
+    for (let i = 0; i < slotsTotal(); i++) {
+      const name = S.winners[i];
+      const li = document.createElement('li');
+      li.className = (name ? 'filled' : '') + (i >= S.count ? ' reserve' : '');
+      const tag = document.createElement('span'); tag.className = 'slot-tag'; tag.textContent = slotLabel(i);
+      const nm = document.createElement('span'); nm.className = 'slot-name' + (name ? '' : ' wait'); nm.textContent = name || '待抽';
+      const tx = document.createElement('span'); tx.className = 'slot-tix';
+      tx.textContent = name && byName.get(name) ? `${byName.get(name).tickets} 張籤` : '';
+      li.append(tag, nm, tx); els.slots.appendChild(li);
+    }
+    els.slotMeta.innerHTML = '';
+    const b = document.createElement('b'); b.textContent = Math.min(S.winners.length, S.count);
+    els.slotMeta.append('已抽出 ', b, ` / ${S.count} 位`);
+  }
+  function renderTix(){
+    const rem = remaining(), total = sumT(rem) || 1;
+    const sorted = people.slice().sort((a, b) => b.tickets - a.tickets || a.order - b.order);
+    els.tix.textContent = '';
+    sorted.forEach(p => {
+      const won = S.winners.includes(p.name);
+      const li = document.createElement('li'); if (won) li.className = 'won';
+      const d = document.createElement('span'); d.className = 'dot'; d.style.background = PALETTE[p.color].bg;
+      const n = document.createElement('span'); n.className = 't-name'; n.textContent = p.name; n.title = p.name;
+      const t = document.createElement('span'); t.className = 't-n'; t.textContent = `${p.tickets} 張`;
+      const pr = document.createElement('span'); pr.className = 't-p';
+      pr.textContent = won ? '已得獎' : `${(p.tickets / total * 100).toFixed(1)}%`;
+      li.append(d, n, t, pr); els.tix.appendChild(li);
+    });
+    els.tixMeta.innerHTML = '';
+    const b1 = document.createElement('b'); b1.textContent = rem.length;
+    const b2 = document.createElement('b'); b2.textContent = sumT(rem);
+    els.tixMeta.append('輪盤上 ', b1, ' 位・', b2, ' 張籤');
+  }
+  function renderMeta(){
+    const rem = remaining(), k = S.winners.length, full = k >= slotsTotal();
+    els.stub.textContent = S.count;
+    els.prizeName.textContent = S.prize;
+    els.sub.textContent = `${people.length} 位會員・${sumT(people)} 張籤｜籤數依 9/26–10/02 PALMS 引薦數，1 筆 = 1 張籤`;
+    els.sound.textContent = `音效：${S.muted ? '關' : '開'}`;
+    els.sound.setAttribute('aria-pressed', String(!S.muted));
+    const blocked = spinning || full || !rem.length;
+    els.spin.textContent = !rem.length ? '名單已抽完' : full ? '抽獎完成' : `抽${slotLabel(k)}`;
+    els.spin.disabled = blocked;
+    els.hub.disabled = blocked;
+    els.reserve.hidden = !(full && rem.length && !spinning);
+    [els.reset, els.apply, els.restore, els.reserve].forEach(b => b.disabled = spinning);
+    renderSlots(); renderTix();
+  }
+  function renderAll(){
+    renderMeta();
+    if (pending && byName.has(pending)) showResult(pending); else renderIdle();
+    redraw();
+  }
+
+  // ---------- spin ----------
+  function spin(){
+    if (spinning) return;
+    const rem = remaining();
+    if (!rem.length || S.winners.length >= slotsTotal()) return;
+    pending = null;
+    ensureAudio();
+    spinning = true; renderMeta();
+    const segs = layout(rem), total = sumT(rem);
+    // one ticket out of all remaining tickets; the person holding it wins
+    let pick = randInt(total), wi = 0;
+    for (; wi < rem.length; wi++) { if (pick < rem[wi].tickets) break; pick -= rem[wi].tickets; }
+    const win = segs[wi], span = win.a1 - win.a0;
+    const frac = span > 0.25 ? 0.15 + Math.random() * 0.7 : 0.3 + Math.random() * 0.4;
+    let target = -Math.PI / 2 - (win.a0 + frac * span);
+    const turns = RM ? 1 : 5 + randInt(3);
+    const minRot = rot + TAU * turns;
+    target += TAU * Math.ceil((minRot - target) / TAU);
+    const from = rot, dur = RM ? 900 : 6000 + randInt(1500);
+    const t0 = performance.now();
+    let last = -1;
+    function frame(now){
+      const t = Math.min(1, (now - t0) / dur);
+      const e = 1 - Math.pow(1 - t, 4);
+      rot = from + (target - from) * e;
+      const idx = idxAt(rot, segs);
+      if (idx !== last) { if (last !== -1) tick(); last = idx; setLive(segs[idx].p); }
+      draw(null);
+      if (t < 1) requestAnimationFrame(frame); else finish();
+    }
+    function finish(){
+      rot = ((target % TAU) + TAU) % TAU;
+      const name = win.p.name;
+      S.winners.push(name); pending = name; spinning = false;
+      save(); fanfare(); confetti(); renderMeta(); showResult(name); redraw();
+    }
+    requestAnimationFrame(frame);
+  }
+  // keep the pointer on the shown winner when the slices change size under it
+  function alignToPending(){
+    if (!pending) return;
+    const segs = layout(wheelPool()), s = segs.find(x => x.p.name === pending);
+    if (s) rot = -Math.PI / 2 - (s.a0 + s.a1) / 2;
+  }
+
+  // ---------- events ----------
+  els.spin.addEventListener('click', spin);
+  els.hub.addEventListener('click', spin);
+  els.reserve.addEventListener('click', () => {
+    if (spinning) return;
+    S.reserves += 1; save();
+    els.hStatus.textContent = `已加一個備取名額，按「抽${slotLabel(S.winners.length)}」開始。`;
+    renderMeta();
+  });
+  els.sound.addEventListener('click', () => { S.muted = !S.muted; save(); if (!S.muted) ensureAudio(); renderMeta(); });
+
+  let armTimer = null;
+  els.reset.addEventListener('click', () => {
+    if (!els.reset.classList.contains('armed')) {
+      els.reset.classList.add('armed'); els.reset.textContent = '再按一次確認';
+      clearTimeout(armTimer);
+      armTimer = setTimeout(() => { els.reset.classList.remove('armed'); els.reset.textContent = '重新開始'; }, 3000);
+      return;
+    }
+    clearTimeout(armTimer);
+    els.reset.classList.remove('armed'); els.reset.textContent = '重新開始';
+    S.winners = []; S.reserves = 0; pending = null; save();
+    rot = startRot();
+    els.hStatus.textContent = '已清除得獎紀錄，所有人回到輪盤上。';
+    renderAll();
+  });
+
+  function copyText(text){
+    const fallback = () => {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px';
+      document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+      ta.remove();
+      els.hStatus.textContent = ok ? '已複製得獎名單。' : '無法自動複製，請直接選取上方名單。';
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => { els.hStatus.textContent = '已複製得獎名單。'; }, fallback);
+      } else fallback();
+    } catch (e) { fallback(); }
+  }
+  els.copy.addEventListener('click', () => {
+    if (!S.winners.length) { els.hStatus.textContent = '還沒有得獎紀錄可以複製。'; return; }
+    const lines = ['BNI 億鑫分會 10/16 例會抽獎', `獎品：${S.prize}（每位一份）`];
+    S.winners.forEach((n, i) => lines.push(`${slotLabel(i)}：${n}`));
+    lines.push('恭喜得主！');
+    copyText(lines.join('\n'));
+  });
+
+  function startRot(){
+    const segs = layout(wheelPool());
+    return segs.length ? -Math.PI / 2 - segs[0].a1 / 2 : 0;
+  }
+  function apply(prize, count, roster){
+    const list = parseRoster(roster);
+    if (!list.length) { els.eStatus.textContent = '名單是空的，請至少輸入一行。'; return; }
+    const c = parseInt(count, 10);
+    if (!(c >= 1 && c <= 20)) { els.eStatus.textContent = '抽出人數請填 1 到 20。'; return; }
+    S.prize = String(prize).trim() || DEFAULTS.prize;
+    S.count = c; S.roster = roster.trim(); S.winners = []; S.reserves = 0; pending = null;
+    loadPeople(); save(); rot = startRot();
+    els.eStatus.textContent = `已套用：${people.length} 位、${sumT(people)} 張籤，得獎紀錄已清空。`;
+    els.hStatus.textContent = '';
+    renderAll(); loadFonts();
+  }
+  els.apply.addEventListener('click', () => apply(els.prizeIn.value, els.countIn.value, els.input.value));
+  els.restore.addEventListener('click', () => {
+    els.prizeIn.value = DEFAULTS.prize; els.countIn.value = DEFAULTS.count; els.input.value = DEFAULTS.roster;
+    apply(DEFAULTS.prize, DEFAULTS.count, DEFAULTS.roster);
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== ' ' && e.code !== 'Space') return;
+    const tag = (e.target && e.target.tagName) || '';
+    if (/^(INPUT|TEXTAREA|BUTTON|SELECT|SUMMARY)$/.test(tag) || (e.target && e.target.isContentEditable)) return;
+    e.preventDefault();
+    if (e.repeat) return;
+    spin();
+  });
+
+  if (!document.fullscreenEnabled || !document.documentElement.requestFullscreen) {
+    els.fs.hidden = true;
+  } else {
+    els.fs.addEventListener('click', () => {
+      if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); }
+      else { document.documentElement.requestFullscreen().catch(() => { els.fs.hidden = true; }); }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      els.fs.textContent = document.fullscreenElement ? '離開全螢幕' : '全螢幕';
+    });
+  }
+
+  const onTheme = () => { readTokens(); redraw(); };
+  if (window.matchMedia) {
+    const mq = matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', onTheme);
+  }
+  new MutationObserver(onTheme).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+
+  function loadFonts(){
+    if (!document.fonts || !document.fonts.load) return;
+    const txt = people.map(p => p.name).join('') + '輪盤上沒有人了…';
+    document.fonts.load(`700 20px "Noto Sans TC"`, txt).then(redraw, () => {});
+  }
+
+  // ---------- init ----------
+  loadPeople();
+  readTokens();
+  els.prizeIn.value = S.prize; els.countIn.value = S.count; els.input.value = S.roster;
+  if (S.winners.length) pending = S.winners[S.winners.length - 1];
+  rot = startRot(); alignToPending();
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(wrap);
+  window.addEventListener('resize', resize);
+  resize();
+  renderAll();
+  loadFonts();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);
+})();
+</script>
+
+</body>
+</html>
