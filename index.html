@@ -166,7 +166,7 @@ textarea{resize:vertical;line-height:1.7}
     <div class="brand">
       <span class="kicker">BNI 億鑫分會・10/30 例會</span>
       <h1>本週抽獎</h1>
-      <p class="sub" id="subLine">籤數依 10/03–10/16 PALMS 引薦數，1 筆 = 1 張籤</p>
+      <p class="sub" id="subLine">籤數依 10/03–10/23 PALMS 引薦數，1 筆 = 1 張籤，沒有引薦不列入</p>
     </div>
     <div class="toolbar">
       <button id="soundBtn" class="tool" type="button" aria-pressed="true">音效：開</button>
@@ -601,7 +601,7 @@ textarea{resize:vertical;line-height:1.7}
     const rem = remaining(), k = S.winners.length, full = k >= slotsTotal();
     els.stub.textContent = S.count;
     els.prizeName.textContent = S.prize;
-    els.sub.textContent = `${people.length} 位會員・${sumT(people)} 張籤｜籤數依 10/03–10/16 PALMS 引薦數，1 筆 = 1 張籤`;
+    els.sub.textContent = `${people.length} 位會員・${sumT(people)} 張籤｜籤數依 10/03–10/23 PALMS 引薦數，1 筆 = 1 張籤，沒有引薦不列入`;
     els.sound.textContent = `音效：${S.muted ? '關' : '開'}`;
     els.sound.setAttribute('aria-pressed', String(!S.muted));
     const blocked = spinning || full || !rem.length;
