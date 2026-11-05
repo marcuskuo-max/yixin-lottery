@@ -164,9 +164,9 @@ textarea{resize:vertical;line-height:1.7}
 <div class="app">
   <header class="top">
     <div class="brand">
-      <span class="kicker">BNI 億鑫分會・10/30 例會</span>
+      <span class="kicker">BNI 億鑫分會・11/06 例會</span>
       <h1>本週抽獎</h1>
-      <p class="sub" id="subLine">籤數依 10/03–10/23 PALMS 引薦數，1 筆 = 1 張籤，沒有引薦不列入</p>
+      <p class="sub" id="subLine">籤數依 10/30 例會審計報告引薦數（10/16–10/29），1 筆 = 1 張籤，沒有引薦不列入</p>
     </div>
     <div class="toolbar">
       <button id="soundBtn" class="tool" type="button" aria-pressed="true">音效：開</button>
@@ -188,8 +188,8 @@ textarea{resize:vertical;line-height:1.7}
         <div class="stub"><small>共抽</small><strong id="stubCount">2</strong><small>位</small></div>
         <div class="prize-body">
           <span class="prize-label">本週獎品</span>
-          <span class="prize-name" id="prizeName">《偶素牛若麵》</span>
-          <span class="prize-rule" id="prizeRule">每位一份・抽中後整人移出輪盤</span>
+          <span class="prize-name" id="prizeName">《哈根達斯冰淇淋》</span>
+          <span class="prize-rule" id="prizeRule">每位一份（一份 6 入）・抽中後整人移出輪盤</span>
         </div>
       </div>
 
@@ -248,7 +248,7 @@ textarea{resize:vertical;line-height:1.7}
       </div>
       <div class="actions">
         <button id="applyBtn" class="primary small" type="button">套用</button>
-        <button id="restoreBtn" class="ghost" type="button">還原 10/30 名單</button>
+        <button id="restoreBtn" class="ghost" type="button">還原 11/06 名單</button>
         <span class="status" id="editStatus" role="status"></span>
       </div>
     </div>
@@ -258,15 +258,16 @@ textarea{resize:vertical;line-height:1.7}
 <script>
 (function(){
   const TAU = Math.PI * 2;
-  const KEY = 'yixin-lottery-1030';
+  const KEY = 'yixin-lottery-1106';
   const FONT = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
   const DEFAULTS = {
-    prize: '《偶素牛若麵》',
+    prize: '《哈根達斯冰淇淋》',
     count: 2,
+    // 10/30 例會審計報告（10/16–10/29，10/23 未開會）：有提供引薦的 17 位，共 77 張籤
     roster: [
-      '官東億 6','石力嘉 6','林明燦 5','曹語蓁 5','葉世祥 4','王姵婷 4',
-      '邱連平 3','劉亭妤 3','朱靜珊 3','陳鋐豈 2','張耿維 2','郭展佑 2',
-      '林建池 2','黃正中 2','黃國彥 2','宋玫珠 1'
+      '劉亭妤 16','邱連平 13','宋玫珠 6','官東億 5','曹語蓁 4','陳鋐豈 4',
+      '黃國彥 4','張耿維 3','朱靜珊 3','林建池 3','王姵婷 3','郭展佑 3',
+      '黃正中 3','吳瑋祈 2','石力嘉 2','葉世祥 2','林明燦 1'
     ].join('\n')
   };
   // slice fills stay the same in both themes; text color chosen for contrast on each fill
@@ -601,7 +602,7 @@ textarea{resize:vertical;line-height:1.7}
     const rem = remaining(), k = S.winners.length, full = k >= slotsTotal();
     els.stub.textContent = S.count;
     els.prizeName.textContent = S.prize;
-    els.sub.textContent = `${people.length} 位會員・${sumT(people)} 張籤｜籤數依 10/03–10/23 PALMS 引薦數，1 筆 = 1 張籤，沒有引薦不列入`;
+    els.sub.textContent = `${people.length} 位會員・${sumT(people)} 張籤｜籤數依 10/30 例會審計報告引薦數（10/16–10/29），1 筆 = 1 張籤，沒有引薦不列入`;
     els.sound.textContent = `音效：${S.muted ? '關' : '開'}`;
     els.sound.setAttribute('aria-pressed', String(!S.muted));
     const blocked = spinning || full || !rem.length;
@@ -707,7 +708,7 @@ textarea{resize:vertical;line-height:1.7}
   }
   els.copy.addEventListener('click', () => {
     if (!S.winners.length) { els.hStatus.textContent = '還沒有得獎紀錄可以複製。'; return; }
-    const lines = ['BNI 億鑫分會 10/30 例會抽獎', `獎品：${S.prize}（每位一份）`];
+    const lines = ['BNI 億鑫分會 11/06 例會抽獎', `獎品：${S.prize}（每位一份，一份 6 入）`];
     S.winners.forEach((n, i) => lines.push(`${slotLabel(i)}：${n}`));
     lines.push('恭喜得主！');
     copyText(lines.join('\n'));
