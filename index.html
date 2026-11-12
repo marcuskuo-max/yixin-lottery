@@ -188,8 +188,8 @@ textarea{resize:vertical;line-height:1.7}
         <div class="stub"><small>共抽</small><strong id="stubCount">2</strong><small>位</small></div>
         <div class="prize-body">
           <span class="prize-label">本週獎品</span>
-          <span class="prize-name" id="prizeName">《本週好禮》</span>
-          <span class="prize-rule" id="prizeRule">每位一份・抽中後整人移出輪盤</span>
+          <span class="prize-name" id="prizeName">《打造高房商：聰明買好宅》</span>
+          <span class="prize-rule" id="prizeRule">張旭嵐 著・每位一本・抽中後整人移出輪盤</span>
         </div>
       </div>
 
@@ -258,10 +258,10 @@ textarea{resize:vertical;line-height:1.7}
 <script>
 (function(){
   const TAU = Math.PI * 2;
-  const KEY = 'yixin-lottery-1113';
+  const KEY = 'yixin-lottery-1113b';
   const FONT = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
   const DEFAULTS = {
-    prize: '《本週好禮》',
+    prize: '《打造高房商：聰明買好宅》',
     count: 2,
     // 10/31–11/06 PALMS：有提供引薦的 16 位，共 42 張籤（帶來賓的郭展佑、黃國彥、林明燦也都有引薦）
     roster: [
@@ -708,7 +708,7 @@ textarea{resize:vertical;line-height:1.7}
   }
   els.copy.addEventListener('click', () => {
     if (!S.winners.length) { els.hStatus.textContent = '還沒有得獎紀錄可以複製。'; return; }
-    const lines = ['BNI 億鑫分會 11/13 例會抽獎', `獎品：${S.prize}（每位一份）`];
+    const lines = ['BNI 億鑫分會 11/13 例會抽獎', `獎品：${S.prize}（每位一本）`];
     S.winners.forEach((n, i) => lines.push(`${slotLabel(i)}：${n}`));
     lines.push('恭喜得主！');
     copyText(lines.join('\n'));
